@@ -1,0 +1,117 @@
+﻿@page "/reservations"
+@using Traveless.Data
+@using System.Text.Json
+
+
+<h3>Reservations</h3>
+
+<p>Flight 1</p>
+<p>Flight 2</p>
+
+<h3>Modify Reservation</h3>
+<form>
+	<label for="code">Code:</label>
+	<input type="text" id="code" name="code" readonly value="@myReservationInfo[0]"><br>
+	<label for="flight">Flight:</label>
+	<input type="text" id="flight" name="flight"readonly value="@myReservationInfo[1]"><br>
+	<label for="airline">Airline:</label>
+	<input type="text" id="airline" name="airline" readonly value="@myReservationInfo[2]"><br>
+	<label for="cost">Cost:</label>
+	<input type="text" id="cost" name="cost" readonly value="@myReservationInfo[3]"><br>
+	<label for="name">Name:</label>
+	<input type="text" id="name" name="name" value="@myReservationInfo[4]"><br>
+	<label for="citizenship">Citizenship:</label>
+	<input type="text" id="citizenship" name="citizenship" value="@myReservationInfo[5]"><br>
+	<label for="status">Status:</label>
+	<select name="status" id="status">
+		<option value="active">Active</option>
+		<option value="inactive">inactive</option>
+	</select><br>
+	<button type="submit">Reserve</button>
+</form>
+
+<h3>Search</h3>
+<form @onsubmit="findReservations">
+	<label for="code">Code:</label>
+	<input type="text" id="code" name="code" @bind="rcode"><br>
+	<label for="airline">Airline (2 letters):</label>
+	<input type="text" id="airline" name="airline" @bind="rairl"><br>
+	<label for="name">Name:</label>
+	<input type="text" id="name" name="name" @bind="rname"><br>
+	<button type="submit">Find reservation</button>
+</form>
+
+
+<select @bind-value="myReservation" @onchange="populateFields" @bind-value:event="oninput">
+@foreach (var i in foundReservations)
+{
+	<option value=@i.ToString()>@i.ToString()</option>
+}
+</select>
+
+@code {
+
+	// loading reservations from JSON file
+	public List<ReservationObj> reservList = new();
+	protected override void OnInitialized()
+	{
+		var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "reservations.json");
+		if (!File.Exists(path))
+			return;
+		var contents = File.ReadAllText(path);
+		var savedItems = JsonSerializer.Deserialize<List<ReservationObj>>(contents);
+
+		reservList.AddRange(savedItems);
+
+		base.OnInitialized();
+	}
+
+
+	// Searching reservations based on reservation codde, airline, and/or name
+	string rcode;
+	string rairl;
+	string rname;
+	List<ReservationObj> foundReservations = new();
+	public void findReservations()
+	{
+		foundReservations.Clear();
+		foreach (var i in reservList)
+		{
+			bool match = true;
+			if (!string.IsNullOrEmpty(rcode) && i.ReservCode != rcode)
+			{
+				match = false;
+			}
+			if (!string.IsNullOrEmpty(rairl) && i.Flight.FlightCode.Substring(0, 2) != rairl)
+			{
+				match = false;
+			}
+			if (!string.IsNullOrEmpty(rname) && i.Name != rname)
+			{
+				match = false;
+			}
+			if (match)
+			{
+				foundReservations.Add(i);
+			}
+		}
+	}
+
+	// Populating fields for Modifying Reservation session session
+	String myReservation;
+	List<String> myReservationInfo = new List<String> { "", "", "", "", "", "", ""};
+	public void populateFields()
+	{
+		myReservationInfo = myReservation.Split(',').ToList();
+	}
+
+	// Modifying Reservation
+	//string modifiedName;
+	//modifiedName = myReservationInfo[4];
+	//string modifiedCitizenship;
+	//string modifiedStatus;
+	//public void modifiedReservation()
+	//{
+
+	//}
+}

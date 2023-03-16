@@ -1,0 +1,94 @@
+﻿.top {
+    display: flex;
+}
+
+.left {
+    display: flex;
+    flex: 2;
+    flex-direction:column;
+    margin-right:10%;
+}
+
+.flightList {
+    display:flex;
+    flex-direction:column;
+    overflow: auto;
+    max-height: 300px;
+}
+
+.right {
+    display: flex;
+    flex: 1;
+    flex-direction:column;
+}
+
+.bottom {
+    float:right;
+    margin-top: 10%;
+}
+
+.flightFinder, .flightButton {
+    margin-left:60%;
+}
+
+
+.finder {
+    text-align:right;
+    float:right;
+    display:flex;
+    flex-wrap:nowrap;
+}
+
+.reserve, .flights{
+    margin-left:45%;
+}
+
+.finder select{
+    width: 800px;
+}
+
+
+.reserveForm div{
+    display:flex;
+    justify-content:right;
+}
+
+input {
+    width:371px;
+}
+
+.reserveButton {
+    margin-right:30%;
+}
+
+#flightDisplay {
+    background-color:white;
+    border: none;
+    color: black;
+    padding:0;
+    margin:2%;
+    display:flex;
+    justify-content:left;
+}
+
+button {
+    margin: 5%;
+    color: white;
+    background-color:royalblue;
+    border:none;
+    border-radius:5px;
+    padding: 10px 20px;
+    white-space:nowrap;
+}
+
+
+
+
+
+
+
+
+
+
+
+
