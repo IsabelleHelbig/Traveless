@@ -1,0 +1,310 @@
+﻿@page "/flights"
+@using Traveless.Data
+@using Traveless.Pages
+@using System.Text.Json
+
+
+<div class="top">
+	<div class="left">
+		<h3 class="flights">Flights</h3>
+		<!--Displaying flights and updatin to show search results-->
+		<div class="flightList">
+			@foreach (var i in displayFlights)
+			{
+				<button id="flightDisplay" @onclick="()=>populateFields(i.ToString())">@i.ToString()</button>
+			}
+			@foreach (var i in foundFlights)
+			{
+				<button id="flightDisplay" @onclick="()=>populateFields(i.ToString())">@i.ToString()</button>
+			}
+			<p>@notFound</p>
+		</div>
+	</div>
+	<div class="right">
+		<!--The reserve form that will be populated when a user selects one of the flights from the list-->
+		<h3 class="reserve">Reserve</h3>
+		<form class="reserveForm" @onsubmit="TryInput">
+			<div>
+				<label for="flight">Flight:</label>
+				<input type="text" id="flight" name="flight" readonly value="@myFlightInfo[0]"><br>
+			</div>
+			<div>
+				<label for="airline">Airline:</label>
+				<input type="text" id="airline" name="airline" readonly value="@myFlightInfo[7]: @myFlightInfo[1] to @myFlightInfo[2]"><br>
+			</div>
+			<div>
+				<label for="day">Day:</label>
+				<input type="text" id="day" name="day" readonly value="@myFlightInfo[3]"><br>
+			</div>
+			<div>
+				<label for="time">Time:</label>
+				<input type="text" id="time" name="time" readonly value="@myFlightInfo[4]"><br>
+			</div>
+			<div>
+				<label for="cost">Cost:</label>
+				<input type="text" id="cost" name="cost" readonly value="@myFlightInfo[6]"><br>
+			</div>
+			<div>
+				<label for="name">Name:</label>
+				<input type="text" id="name" name="name" @bind="clientName"><br>
+			</div>
+			<div>
+				<label for="citizenship">Citizenship:</label>
+				<input type="text" id="citizenship" name="citizenship" @bind="clientCitizenship"><br>
+			</div>
+			<div>
+				<button class="reserveButton" type="submit">Reserve</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div class="bottom">
+		<!--Flight finder so that the user can input departure/arrival airports plus a day in order to
+			search for flights and have results populated in the flights section
+		-->
+		<h3 class="flightFinder">Flight Finder</h3>
+		<form class="flightForm" @onsubmit="findFlights">
+			<div class ="finder">
+				<label for="from">From:</label>
+				<select name="fromAirport" id="fromAirport" @bind="fromAirport">
+				@foreach (var i in airportsList)
+				{
+					<option value=@i>@i</option>
+				}
+				</select><br>
+			</div>
+			<div class ="finder">
+				<label for="to">To:</label>
+				<select name="toAirport" id="toAirport" @bind="toAirport">
+				@foreach (var i in airportsList)
+				{
+					<option value=@i>@i</option>
+				}
+				</select><br>
+			</div>
+			<div class="finder">
+				<label for="weekday">Day:</label>
+				<select name="weekday" id="weekday" @bind="flyingDay">
+					<option selected value="">Any</option>
+					<option value="Monday">Monday</option>
+					<option value="Tuesday">Tuesday</option>
+					<option value="Wednesday">Wednesday</option>
+					<option value="Thursday">Thursday</option>
+					<option value="Friday">Friday</option>
+					<option value="Saturday">Saturday</option>
+					<option value="Sunday">Sunday</option>
+				</select><br>
+			</div>
+			<div>
+				<button class="flightButton" type="submit">Find flights</button>
+			</div>
+		</form>
+</div>
+
+@code {
+
+
+	// Loading CSV files from resource/raw folder
+	List<FlightObj> flightsList = new();
+	List<String> airportsList = new();
+	List<String> airlinesList = new();
+
+	//Reading the airport file and adding each airport to an object
+	public async Task readAiports()
+	{
+		String line;
+
+		using Stream fileStream = await FileSystem.OpenAppPackageFileAsync("airports.csv");
+		using StreamReader reader = new StreamReader(fileStream);
+		while ((line = reader.ReadLine()) != null)
+		{
+			string[] parts = line.Split(',');
+			airportsList.Add(parts[0]);
+		}
+	}
+
+	//reading the airlines file and adding them to an object
+	public async Task readAirlines()
+	{
+		String line;
+
+		using Stream fileStream = await FileSystem.OpenAppPackageFileAsync("airlines.csv");
+		using StreamReader reader = new StreamReader(fileStream);
+		while ((line = reader.ReadLine()) != null)
+		{
+			string[] parts = line.Split(',');
+			airlinesList.Add(parts[0]);
+		}
+	}
+
+	
+	//reading the flights file and adding each to an object
+	public async Task readFlights()
+	{
+		String line;
+
+		using Stream fileStream = await FileSystem.OpenAppPackageFileAsync("flights.csv");
+		using StreamReader reader = new StreamReader(fileStream);
+		while ((line = reader.ReadLine()) != null)
+		{
+			string[] parts = line.Split(',');
+			//changing the type of seats, cost and airline to work with later on
+			int seats = int.Parse(parts[5]);
+			double cost = Convert.ToDouble(parts[6]);
+			string airline = Convert.ToString(parts[0]);
+			//switching out the airline 2 letters into the full airline name when populated into the form
+			airline = airline.Substring(0, 2);
+			FlightObj f = new FlightObj(parts[0], airline, parts[1], parts[2], parts[3], parts[4], seats, cost);
+			flightsList.Add(f);
+		}
+	}
+
+	//method to display flights when the app is opened
+	public async Task DisplayFlights()
+	{
+		foreach (var i in flightsList)
+		{
+			displayFlights.Add(i);
+		}
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		await readAiports();
+		await readAirlines();
+		await readFlights();
+		await DisplayFlights();
+
+	}
+
+	//exception to check if the name entered is too long
+	public class StringTooLongException : Exception
+	{
+		public StringTooLongException()
+		{
+			App.Current.MainPage.DisplayAlert("Error", $"The name you entered is too long.", "OK");
+
+		}
+	} 
+
+	// Searching for flight(s) based on airports and day
+	string fromAirport;
+	string toAirport;
+	string flyingDay;
+	string notFound;
+	List<FlightObj> foundFlights = new();
+	List<FlightObj> displayFlights = new();
+
+
+
+
+	public void findFlights()
+	{
+		displayFlights.Clear();
+		foundFlights.Clear();
+		notFound = string.Empty;
+		if (flyingDay == null || flyingDay == "")
+		{
+			foreach (var i in flightsList)
+			{
+				if (i.DepartureAirport == fromAirport && i.DestinationAirport == toAirport)
+				{
+					foundFlights.Add(i);
+				}
+			}
+		}
+		else
+		{
+			foreach (var i in flightsList)
+			{
+				if (i.DepartureAirport == fromAirport && i.DestinationAirport == toAirport && i.FlyingDay == flyingDay)
+				{
+					foundFlights.Add(i);
+				}
+			}
+		}
+		if (!foundFlights.Any())
+		{
+			notFound = "No flights found!";
+		}
+
+	}
+
+	// Populating fields for reserve session
+	List<String> myFlightInfo = new List<String> { "", "", "", "", "", "", "", ""};
+	public void populateFields(String myFlight)
+	{
+		myFlightInfo = myFlight.Split(',').ToList();
+	}
+
+	//method to check the exception
+	public void TryInput()
+	{
+		try
+		{
+			MakeReservation();
+		}
+		catch (StringTooLongException)
+		{
+		}
+	}
+	// Making reservation
+	static List<ReservationObj> reservList = new();
+	string clientName;
+	string clientCitizenship;
+	public async Task MakeReservation()
+	{
+
+		if (clientName != null && clientName != "" && clientCitizenship != null && clientCitizenship != "" && myFlightInfo[0]!="") 
+		{
+			//checking and throwing the exception
+			if (clientName.Length >= 50)
+			{
+				throw new StringTooLongException();
+			}
+			int seats = int.Parse(myFlightInfo[5]);
+			if (seats>0){
+				seats -= 1;
+				double cost = Convert.ToDouble(myFlightInfo[6]);
+				FlightObj f = new FlightObj(myFlightInfo[0], myFlightInfo[0].Substring(0, 2), myFlightInfo[1], myFlightInfo[2], myFlightInfo[3], myFlightInfo[4], seats, cost);
+
+				Random random = new Random();
+				int num = random.Next(1000, 9999);
+				char letter = (char)random.Next('A', 'Z' + 1);
+				string reservCode = letter.ToString() + num.ToString();
+
+				ReservationObj r = new ReservationObj(reservCode, f, clientName, clientCitizenship);
+				reservList.Add(r);
+				clientName = string.Empty;
+				clientCitizenship = string.Empty;
+
+				var contents = JsonSerializer.Serialize(reservList);
+				var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "reservations.json");
+				File.WriteAllText(path, contents);
+
+				await App.Current.MainPage.DisplayAlert("Reservation Saved", $"List has been saved to {path}", "OK");
+			}
+			else
+			{
+				await App.Current.MainPage.DisplayAlert("Reservation Not Saved", $"The flight you have chosen is full. Please pick a different flight.", "OK");
+			}
+		}
+		else
+		{
+			if (clientName == null || clientName == "")
+			{
+				await App.Current.MainPage.DisplayAlert("Reservation Not Saved", $"Name field is required!", "OK");
+			}
+			else if (clientCitizenship == null || clientCitizenship == "")
+			{
+				await App.Current.MainPage.DisplayAlert("Reservation Not Saved", $"Citizenship field is required!", "OK");
+			}
+			else
+			{
+				await App.Current.MainPage.DisplayAlert("Reservation Not Saved", $"Did you choose a flight? Please try again.", "OK");
+			}
+		}
+
+	}
+}
