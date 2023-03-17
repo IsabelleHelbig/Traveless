@@ -2,98 +2,22 @@
 @using Traveless.Data
 @using System.Text.Json
 
-<style>
-	.top {
-		display: flex;
-	}
 
-	.left {
-		display: flex;
-		flex: 2;
-		flex-direction: column;
-		margin-right: 10%;
-	}
-
-	.flightList {
-		display: flex;
-		flex-direction: column;
-		overflow: auto;
-		max-height: 300px;
-	}
-
-	.right {
-		display: flex;
-		flex: 1;
-		flex-direction: column;
-	}
-
-	.bottom {
-		float: right;
-		margin-top: 10%;
-	}
-
-	.flightFinder, .flightButton {
-		margin-left: 60%;
-	}
-
-
-	.finder {
-		text-align: right;
-		float: right;
-		display: flex;
-		flex-wrap: nowrap;
-	}
-
-	.reserve, .flights {
-		margin-left: 45%;
-	}
-
-	.finder select {
-		width: 800px;
-	}
-
-
-	.reserveForm div {
-		display: flex;
-		justify-content: right;
-	}
-
-	input {
-		width: 371px;
-	}
-
-	.reserveButton {
-		margin-right: 30%;
-	}
-
-	#flightDisplay {
-		background-color: white;
-		border: none;
-		color: black;
-		padding: 0;
-		margin: 2%;
-		display: flex;
-		justify-content: left;
-	}
-
-	button {
-		margin: 5%;
-		color: white;
-		background-color: royalblue;
-		border: none;
-		border-radius: 5px;
-		padding: 10px 20px;
-		white-space: nowrap;
-	}
-
-</style>
 
 <div class="top">
 	<div class="left">
-		<h3 class="flights">Reservations</h3>
+		<h3 class="reservations">Reservations</h3>
+		<div class="resList">
 
-		<p>Flight 1</p>
-		<p>Flight 2</p>
+			<!--insert reservation list here-->
+		</div>
+
+		<select @bind-value="myReservation" @onchange="populateFields" @bind-value:event="oninput">
+			@foreach (var i in foundReservations)
+			{
+				<option value=@i.ToString()>@i.ToString()</option>
+			}
+		</select>
 
 		@if (reservList.Count > 0)
 		{
@@ -125,16 +49,9 @@
 				}
 			</ul>
 		}
-
-
-
-
 	</div>
-
 	<div class="right">
-
-
-		<h3 class="reserve">Modify Reservation</h3>
+		<h3 class="modify">Modify Reservation</h3>
 		<form class="reserveForm">
 			<div>
 				<label for="code">Code:</label>
@@ -168,54 +85,32 @@
 				</select>
 			</div>
 			<div>
-
-				<button type="submit" @onsubmit="modifyReservation">Reserve</button>
+				<button class="modifyButton" type="submit" @onsubmit="modifyReservation">Modify</button>
 			</div>
-
 		</form>
 	</div>
-
-
 </div>
 
 <div class="bottom">
-	<h3 class="flightFinder">Search</h3>
-	<form @onsubmit="findReservations">
-		<label for="code">Code:</label>
-		<input type="text" id="code" name="code" @bind="rcode"><br>
-		<label for="airline">Airline (2 letters):</label>
-		<input type="text" id="airline" name="airline" @bind="rairl"><br>
-		<label for="name">Name:</label>
-		<input type="text" id="name" name="name" @bind="rname"><br>
-		<button type="submit">Find reservation</button>
+	<h3 class="resFinder">Search</h3>
+	<form class="resForm" @onsubmit="findReservations">
+		<div class="finder">
+			<label for="code">Code:</label>
+			<input type="text" id="code" name="code" @bind="rcode"><br>
+		</div>
+		<div class="finder">
+			<label for="airline">Airline (2 letters):</label>
+			<input type="text" id="airline" name="airline" @bind="rairl"><br>
+		</div>
+		<div class="finder">
+			<label for="name">Name:</label>
+			<input type="text" id="name" name="name" @bind="rname"><br>
+		</div>
+		<div>
+			<button class="searchButton" type="submit">Find reservation</button>
+		</div>
 	</form>
-
 </div>
-
-
-<div class="reservations">
-	<h3 class="flights">Reservations</h3>
-	<ul>
-		@foreach (var reservation in reservList)
-		{
-			<li>
-				<span>@reservation.ReservCode</span>
-				<span>@reservation.Flight.FlightCode</span>
-				<span>@reservation.Name</span>
-				<span>@reservation.Status</span>
-			</li>
-		}
-	</ul>
-</div>
-
-
-<select @bind-value="myReservation" @onchange="populateFields" @bind-value:event="oninput">
-	@foreach (var i in foundReservations)
-	{
-		<option value=@i.ToString()>@i.ToString()</option>
-	}
-</select>
-
 
 
 @code {
