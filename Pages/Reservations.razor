@@ -9,50 +9,18 @@
 		<h3 class="reservations">Reservations</h3>
 		<div class="resList">
 
-			<!--insert reservation list here-->
-			@foreach (var i in foundReservations)
-			{
-				<button id="reservDisplay" @onclick="()=>populateFields(i.ToString())">@i.ToString()</button>
-			}
-		</div>
-
-		<select>
-			@foreach (var i in foundReservations)
-			{
-				<option value=@i.ToString()>@i.ToString()</option>
-			}
-		</select>
-
 		@if (reservList.Count > 0)
 		{
-			<ul>
-				@foreach (var reservation in foundReservations)
-				{
-					<li>
-						<span>@reservation.ReservCode</span>
-						<span>@reservation.Flight.FlightCode</span>
-						<span>@reservation.Name</span>
-						<span>@reservation.Status</span>
-					</li>
-				}
-			</ul>
+			@foreach (var i in foundReservations)
+			{
+			<button id="reservDisplay" @onclick="()=>populateFields(i.ToString())">@i.ToString()</button>
+			}		
 		}
 		else
 		{
 			<p>No reservations found, displaying all reservations.</p>
-
-			<ul>
-				@foreach (var reservation in reservList)
-				{
-					<li>
-						<span>@reservation.ReservCode</span>
-						<span>@reservation.Flight.FlightCode</span>
-						<span>@reservation.Name</span>
-						<span>@reservation.Status</span>
-					</li>
-				}
-			</ul>
 		}
+		</div>
 	</div>
 	<div class="right" >
 		<h3 class="modify">Modify Reservation</h3>
